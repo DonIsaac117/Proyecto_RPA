@@ -1,0 +1,4 @@
+selenium
+openpyxl
+psutil
+pyautogui
