@@ -2,4 +2,3 @@ selenium
 openpyxl
 psutil
 pyautogui
-pywin32
