@@ -1,11 +1,22 @@
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager        
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import time
+import pyautogui
+import pyperclip
+#"C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="C:\Users\SOPORTETI\AppData\Local\Google\Chrome\User Data"
 
-# Conectar a Chrome en modo debug
+# Ruta del driver descargado manualmente
+ruta_driver = "C:\\chromedriver-win64\\chromedriver.exe"
+
+# Opciones de Chrome para modo depuración
 chrome_options = webdriver.ChromeOptions()
-chrome_options.debugger_address = "localhost:9222"
+chrome_options.debugger_address = "localhost:9222"  # Se conecta a Chrome en modo depuración
+
+# Conectar solo a la sesión abierta
 driver = webdriver.Chrome(options=chrome_options)
 
 # Obtener todas las pestañas abiertas antes de abrir una nueva
@@ -18,8 +29,8 @@ driver.switch_to.window(tabs_before[-1])
 driver.execute_script("window.open('https://outlook.office.com/mail/', '_blank');")
 
 # Esperar un momento para que la nueva pestaña se cree
-import time
-time.sleep(2)
+
+time.sleep(2) 
 
 # Obtener todas las pestañas abiertas después de abrir Outlook
 tabs_after = driver.window_handles 
@@ -48,23 +59,57 @@ wait.until(EC.title_contains("Correo: Jorge Isaac Espitia Cardozo - Outlook"))
 nuevo_mensaje = wait.until(EC.element_to_be_clickable((By.XPATH, "//span[text()='Correo nuevo']/ancestor::button")))
 nuevo_mensaje.click()
 
+# Abrir un nuevo correo
+nuevo_mensaje = wait.until(EC.element_to_be_clickable((By.XPATH, "//span[text()='Correo nuevo']/ancestor::button")))
+nuevo_mensaje.click()
+
 # Campo "Para" (destinatario)
 campo_destinatario = wait.until(EC.element_to_be_clickable((By.XPATH, "//div[@role='textbox' and @aria-label='Para']")))
 campo_destinatario.send_keys("correo@ejemplo.com")
 
-# Escribir el asunto
-campo_asunto = wait.until(EC.element_to_be_clickable((By.XPATH, "//input[@aria-label='Agregar un asunto']")))
-campo_asunto.send_keys("Asunto de prueba")
+# Campo "CC"
+campo_cc = wait.until(EC.presence_of_element_located((By.XPATH, "//div[@aria-label='CC']")))
+campo_cc.click()
+campo_cc.send_keys("cc@example.com")
 
-campo_cuerpo = wait.until(EC.presence_of_element_located((By.XPATH, "//div[@role='textbox' and @contenteditable='true']")))
-campo_cuerpo.click()  # Activa el campo
+# **Forzar cambio de foco** haciendo clic en el campo "Asunto"
+campo_asunto = wait.until(EC.element_to_be_clickable((By.XPATH, "//input[@aria-label='Agregar un asunto']")))
+campo_asunto.click()
+campo_asunto.send_keys("Asunto de prueba")
+time.sleep(2)
+
+# **Esperar a que el cuerpo del correo esté presente y activarlo**
+campo_cuerpo = wait.until(EC.presence_of_element_located((By.XPATH, "//div[contains(@class, 'elementToProof')]")))
+campo_cuerpo.click()
 campo_cuerpo.send_keys("Este es el contenido del correo.")
 
 
 
+# Hacer clic en el botón "Adjuntar"
+boton_adjuntar = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(@aria-label, 'Adjuntar')]")))
+boton_adjuntar.click()
+time.sleep(2)
 
+# Hacer clic en "Examinar este equipo"
+boton_examinar = wait.until(EC.element_to_be_clickable((By.XPATH, "//span[text()='Examinar este equipo']")))
+boton_examinar.click()
+time.sleep(2)  # Pausa para que se abra la ventana del explorador
 
+print("Esperando la ventana de selección de archivos...")
+time.sleep(2)  # Asegurar que la ventana se haya abierto correctamente
 
+# **Forzar el foco en la ventana emergente**
+pyautogui.click(x=377, y=69)  # Clic en el centro de la pantalla (ajustar si es necesario)
+time.sleep(1)
 
+# **Método alternativo: Escribir la ruta directamente en lugar de pegarla**
+ruta_archivo = r"C:\Users\SOPORTETI\Downloads\Lorem ipsum dolor sit amet.pdf"
+print("Escribiendo la ruta del archivo...")
+pyautogui.write(ruta_archivo)  # Escribir la ruta directamente
+time.sleep(1)
 
+print("Presionando ENTER para seleccionar el archivo...")
+pyautogui.press("enter")  # Confirmar selección del archivo
+time.sleep(2)
 
+print("Archivo adjuntado correctamente.")
