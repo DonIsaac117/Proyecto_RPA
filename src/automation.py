@@ -35,18 +35,6 @@ time.sleep(2)
 # Obtener todas las pestañas abiertas después de abrir Outlook
 tabs_after = driver.window_handles 
 
-if len(tabs_after) > len(tabs_before):
-    nueva_pestaña = list(set(tabs_after) - set(tabs_before))[0]  
-    driver.switch_to.window(nueva_pestaña)  
-    print("Se abrió Outlook en la nueva pestaña.")
-else:
-    print("Error: No se encontró la nueva pestaña de Outlook.")
-
-# Obtener todas las pestañas nuevamente
-for idx, tab in enumerate(tabs_after):
-    driver.switch_to.window(tab)  # Cambiar a cada pestaña
-    print(f"{idx}: {tab} - {driver.title}")  # Mostrar su título
-
 driver.switch_to.window(tabs_after[-1])  # Cambiar a la pestaña de Outlook
 print("Pestaña activa:", driver.title)  
 
@@ -63,32 +51,42 @@ nuevo_mensaje.click()
 nuevo_mensaje = wait.until(EC.element_to_be_clickable((By.XPATH, "//span[text()='Correo nuevo']/ancestor::button")))
 nuevo_mensaje.click()
 
+# Campo "Para" (destinatario)
+campo_destinatario = wait.until(EC.element_to_be_clickable((By.XPATH, "//div[@role='textbox' and @aria-label='Para']")))
+campo_destinatario.send_keys("soporte@ccfacatativa.org.co")
 
-# Hacer clic en el botón "Adjuntar"
-boton_adjuntar = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(@aria-label, 'Adjuntar')]")))
-boton_adjuntar.click()
-time.sleep(2)
+# Campo "CC"
+campo_cc = wait.until(EC.presence_of_element_located((By.XPATH, "//div[@aria-label='CC']")))
+campo_cc.send_keys("soporte@ccfacatativa.org.co")
 
-# Hacer clic en "Examinar este equipo"
-boton_examinar = wait.until(EC.element_to_be_clickable((By.XPATH, "//span[text()='Examinar este equipo']")))
-boton_examinar.click()
-time.sleep(2)  # Pausa para que se abra la ventana del explorador
-
-print("Esperando la ventana de selección de archivos...")
-time.sleep(2)  # Asegurar que la ventana se haya abierto correctamente
-
-# **Forzar el foco en la ventana emergente**
-pyautogui.click(x=377, y=69)  # Clic en el centro de la pantalla (ajustar si es necesario)
+# **Forzar cambio de foco** haciendo clic en el campo "Asunto"
+campo_asunto = wait.until(EC.presence_of_element_located((By.XPATH, "//input[@aria-label='Agregar un asunto']")))
+campo_asunto.send_keys("Asunto de prueba")
 time.sleep(1)
 
-# **Método alternativo: Escribir la ruta directamente en lugar de pegarla**
+# **Esperar a que el cuerpo del correo esté presente y activarlo**
+campo_cuerpo = wait.until(EC.presence_of_element_located((By.XPATH, "//div[@role='textbox' and @aria-label='Cuerpo del mensaje, presione Alt+F10 para salir']")))
+campo_cuerpo.click()
+campo_cuerpo.send_keys("Este es el contenido del correo.")
+
 ruta_archivo = r"C:\Users\SOPORTETI\Downloads\Lorem ipsum dolor sit amet.pdf"
-print("Escribiendo la ruta del archivo...")
-pyautogui.write(ruta_archivo)  # Escribir la ruta directamente
-time.sleep(1)
 
-print("Presionando ENTER para seleccionar el archivo...")
-pyautogui.press("enter")  # Confirmar selección del archivo
-time.sleep(2)
+# Busca todos los inputs de tipo file
+inputs_adjuntar = wait.until(EC.presence_of_all_elements_located((By.XPATH, "//input[@type='file']")))
 
-print("Archivo adjuntado correctamente.")
+# Si hay más de un input, selecciona el segundo (índice 1)
+if len(inputs_adjuntar) > 1:
+    inputs_adjuntar[1].send_keys(ruta_archivo)
+else:
+    print("No se encontró el input de adjuntar archivos correcto.")
+
+# Esperar hasta que al menos un archivo adjunto aparezca en la lista
+wait.until(EC.presence_of_element_located((By.XPATH, "//div[@role='listbox' and @aria-label='archivos adjuntos']//div[@role='option']")))
+
+# Ahora sí, hacer clic en el botón de enviar
+boton_enviar = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[@aria-label='Enviar']")))
+boton_enviar.click()
+
+
+
+
